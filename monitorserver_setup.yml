@@ -1,0 +1,70 @@
+---
+- name: Install Docker Engine and Setup Environment on Debian 12
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: Update all packages to the latest version
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Install required packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+
+    - name: Add Docker's official GPG key
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/debian/gpg
+        state: present
+
+    - name: Add Docker repository
+      ansible.builtin.apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/debian bullseye stable
+        state: present
+
+    - name: Install Docker Engine and related packages
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: latest
+
+    - name: Ensure Docker service is running
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Create directories /docker/..
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - /docker
+        - /docker/netdata
+        - /docker/netdata/netdataconfig
+        - /docker/netdata/netdatalib
+        - /docker/netdata/netdatacache
+
+    - name: Pull docker-compose.yml from GitHub
+      ansible.builtin.get_url:
+        url: https://github.com/urbanuplink/docker/raw/main/docker-compose.yml
+        dest: /docker/netdata/docker-compose.yml
+        mode: '0644'
+
+    - name: Start Docker containers as defined in docker-compose.yml
+      community.docker.docker_compose:
+        project_src: /docker/netdata/
+        state: present
+        build: yes
+        pull: yes
