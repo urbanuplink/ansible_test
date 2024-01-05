@@ -16,7 +16,6 @@
           - curl
           - gnupg
           - lsb-release
-          - python3-pip
           - git
           - sudo
         state: present
@@ -47,11 +46,6 @@
         state: started
         enabled: yes
 
-    - name: Install Docker SDK for Python
-      pip:
-        name: docker
-        state: present
-
     - name: Create directories /docker/..
       ansible.builtin.file:
         path: "{{ item }}"
@@ -70,9 +64,8 @@
         dest: /docker/netdata/docker-compose.yml
         mode: '0644'
 
-    - name: Start Docker containers as defined in docker-compose.yml
-      community.docker.docker_compose:
-        project_src: /docker/netdata/
-        state: present
-        build: yes
-        pull: yes
+    - name: Add user 'urbanuplink' to the 'sudo' group
+      user:
+        name: urbanuplink
+        groups: sudo
+        append: yes
