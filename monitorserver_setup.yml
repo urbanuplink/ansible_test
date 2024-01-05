@@ -16,6 +16,9 @@
           - curl
           - gnupg
           - lsb-release
+          - python3-pip
+          - git
+          - sudo
         state: present
 
     - name: Add Docker's official GPG key
@@ -43,6 +46,11 @@
         name: docker
         state: started
         enabled: yes
+
+    - name: Install Docker SDK for Python
+      pip:
+        name: docker
+        state: present
 
     - name: Create directories /docker/..
       ansible.builtin.file:
